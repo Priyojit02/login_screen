@@ -246,7 +246,13 @@ export const useChatStore = create<ChatState>()(
 
         set({ isLoading: true, isStreaming: true });
 
-        const agentName = agents.find(a => a.id === (currentChat?.agent_id || selectedAgentId))?.name || 'agent';
+        const agentName = (() => {
+          const agentId = currentChat?.agent_id || selectedAgentId || undefined;
+          const match = agentId ? agents.find(a => a.id === agentId) : undefined;
+          if (match?.name) return match.name;
+          if (agentId) return agentId; // fallback to id if display name not loaded yet
+          return 'agent';
+        })();
 
         try {
           // Check if chat has agent_id (agent mode) or not (normal mode)
