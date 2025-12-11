@@ -48,14 +48,9 @@ function stripBackendPayload(content: string): { cleaned: string; docxLink?: str
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 
-  // If the cleaned text lost the docx link, re-append a user-friendly link line
-  const baseText = filteredLines || cleaned;
-  if (docxLink && !baseText.includes(docxLink)) {
-    const appended = `${baseText}\n\n📄 [Download Technical Specification](${docxLink})`;
-    return { cleaned: appended, docxLink };
-  }
-
-  return { cleaned: baseText, docxLink };
+  // Return cleaned text and docx link separately - don't add the link to the text
+  // The ReactMarkdown component will handle rendering the download button
+  return { cleaned: filteredLines || cleaned, docxLink };
 }
 
 export function MessageBubble({ message, isLast, isStreaming }: MessageBubbleProps) {
@@ -246,31 +241,7 @@ export function MessageBubble({ message, isLast, isStreaming }: MessageBubblePro
                       return <ol className="list-decimal pl-4 mb-2">{children}</ol>;
                     },
                     a({ href, children }) {
-                      // Check if this is a DOCX download link
-                      const isDocxDownload = href?.includes('/jobs/') && href?.includes('/docx');
-                      
-                      if (isDocxDownload && href) {
-                        // Ensure full URL to backend
-                        let fullUrl = href;
-                        if (!href.startsWith('http')) {
-                          fullUrl = `${API_BASE_URL}${href}`;
-                        } else if (href.includes(':3000')) {
-                          // Replace any frontend port with backend URL
-                          fullUrl = href.replace(/http:\/\/localhost:\d+/, API_BASE_URL);
-                        }
-                        
-                        return (
-                          <a
-                            href={fullUrl}
-                            download="Technical_Specification.docx"
-                            className="inline-flex items-center gap-2 px-4 py-2 mt-2 bg-accent hover:bg-accent/90 text-white rounded-lg transition-colors font-medium no-underline"
-                          >
-                            <Download className="h-4 w-4" />
-                            Download Technical Specification
-                          </a>
-                        );
-                      }
-                      
+                      // DOCX download links are handled separately above
                       return (
                         <a href={href} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
                           {children}
@@ -281,6 +252,18 @@ export function MessageBubble({ message, isLast, isStreaming }: MessageBubblePro
                 >
                   {displayedContent}
                 </ReactMarkdown>
+                
+                {/* Download button for DOCX files */}
+                {processed.docxLink && (
+                  <a
+                    href={`${API_BASE_URL}${processed.docxLink}`}
+                    download="Technical_Specification.docx"
+                    className="inline-flex items-center gap-2 px-4 py-2 mt-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium no-underline"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download Technical Specification
+                  </a>
+                )}
                 
                 {/* Streaming cursor */}
                 {isStreaming && (
