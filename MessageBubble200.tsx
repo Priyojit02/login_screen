@@ -70,17 +70,17 @@ export function MessageBubble({ message, isLast, isStreaming }: MessageBubblePro
   const isUser = message.role === 'user';
   const isAssistant = message.role === 'assistant';
 
-  const processed = isAssistant ? stripBackendPayload(message.content) : { cleaned: message.content };
+  const processed = isAssistant ? stripBackendPayload(message.content) : { cleaned: message.content, docxLink: undefined };
   let displayedContent = processed.cleaned;
 
-  // Make "..." blink if streaming
+  // Make "..." blink if streaming (using markdown syntax instead of HTML)
   if (isStreaming && displayedContent.endsWith('...')) {
-    displayedContent = displayedContent.slice(0, -3) + '<span class="text-orange-500 font-semibold animate-pulse">...</span>';
+    displayedContent = displayedContent.slice(0, -3) + '*...*';
   }
 
-  // Make "Agent is running" blink in orange and bold
+  // Make "Agent is running" blink in orange and bold (using markdown syntax)
   if (isStreaming && displayedContent.includes('🤖 Agent is running')) {
-    displayedContent = displayedContent.replace('🤖 Agent is running', '<span class="animate-pulse text-orange-500 font-semibold">🤖 Agent is running</span>');
+    displayedContent = displayedContent.replace('🤖 Agent is running', '**🤖 Agent is running**');
   }
 
   const handleCopy = useCallback(async () => {
@@ -209,7 +209,7 @@ export function MessageBubble({ message, isLast, isStreaming }: MessageBubblePro
                   remarkPlugins={[remarkGfm]}
                   components={{
                     code({ className, children, ...props }) {
-                      const match = /language-(\w+)/.exec(className || ''));
+                      const match = /language-(\w+)/.exec(className || '');
                       const language = match ? match[1] : '';
                       const isInline = !match;
                       
